@@ -63,12 +63,12 @@ Next: in a follow-up video we fine-tune these exact failures.
 
 | Step | Video timestamp |
 |---|---|
-| Setup and speed | {TS_SETUP} |
-| Router | {TS_ROUTER} |
-| Scribe | {TS_SCRIBE} |
-| Receipts | {TS_RECEIPTS} |
-| Desk in Hermes | {TS_DESK} |
-| Head-to-head | {TS_H2H} |
+| Setup and speed | 8:49 |
+| Router | 9:11 |
+| Scribe | 9:40 |
+| Receipts | 9:51 |
+| Desk in Hermes | 10:18 |
+| Head-to-head | 11:31 |
 
 ## Notes
 - llama.cpp support for LFM3-Audio/Omni (ggml-org/llama.cpp#31257) and d1 (ggml-org/llama.cpp#31275) was merged just before recording; `setup` builds master at 8ca4060, which has both.
