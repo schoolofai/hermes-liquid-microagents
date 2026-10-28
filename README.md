@@ -59,6 +59,8 @@ Each failure above maps to a notebook in the [Liquid cookbook](https://github.co
 
 Proof point from Liquid (their result, not ours): the [wind turbine inspection](https://github.com/Liquid4All/cookbook/tree/main/examples/wind-turbine-inspection) example fine-tuned LFM3-VL-2B with LoRA SFT then GRPO; on 1,372 held-out photos defect-type accuracy went from 9.2% to 66.5% and detection F1 from 0.003 to 0.106.
 
+Next: in a follow-up video we fine-tune these exact failures.
+
 | Step | Video timestamp |
 |---|---|
 | Setup and speed | {TS_SETUP} |
