@@ -9,7 +9,7 @@ Q = {
 }
 def ask(state):
     req = urllib.request.Request(URL, json.dumps({"state":state,"questions":Q}).encode(), {"Content-Type":"application/json"})
-    return json.load(urllib.request.urlopen(req, timeout=60))
+    r = json.load(urllib.request.urlopen(req, timeout=60)); r.pop("model", None); return r
 def main(sandbox):
     routes = {}
     for p in sorted(glob.glob(f"{sandbox}/inbox/*.eml")):

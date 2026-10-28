@@ -53,7 +53,10 @@ d = rd(f"{SB}/drafts/reply_05.eml"); msg = email.message_from_string(d) if d els
 busy = [(ev(b)[1], ev(b)[2]) for b in evs if "sync" not in b.lower()]
 DAYS = {"mon": 0, "tue": 1, "wed": 2, "thu": 3, "fri": 4}
 props = []
-for day, h, m, ap in re.findall(r"\b(mon|tue|wed|thu|fri)\w*[^\n]{0,20}?(\d{1,2})[:.]?(\d{2})?\s*(am|pm)?", d.lower()):
+# a time is HH:MM / HH.MM, or H am/pm; a bare number (e.g. the "2" in "Nov 2") is not a time
+TIME = r"\b(mon|tue|wed|thu|fri)\w*[^\n]{0,30}?\b(\d{1,2})(?:[:.](\d{2})\s*(am|pm)?|\s*(am|pm))"
+for day, h, m, ap1, ap2 in re.findall(TIME, d.lower()):
+    ap = ap1 or ap2
     h = int(h) + (12 if ap == "pm" and int(h) < 12 else 0); start = 20261102 + DAYS[day]
     props.append((f"{start}T{h:02d}{m or '00'}00Z", f"{start}T{h + 1:02d}{m or '00'}00Z", h))
 def free(s, e, h): return 9 <= h <= 16 and all(not (s < be and e > bs) for bs, be in busy)

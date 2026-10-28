@@ -17,26 +17,35 @@ Everything goes into `~/proai-tmp/lfm3`. Nothing outside that folder is changed.
 
 ```bash
 git clone <this repo> && cd hermes-liquid-microagents
-bash mac/run_mac.sh setup      # builds llama.cpp (Metal) + 2 PR builds, downloads ~6 GB of GGUFs, makes fixtures
+bash mac/run_mac.sh setup      # builds llama.cpp (Metal, pinned at 8ca4060), downloads ~6 GB of GGUFs, makes fixtures
 bash mac/run_mac.sh bench      # clean tok/s, TTFT, peak memory
 bash mac/run_mac.sh serve      # 4 llama-servers on 127.0.0.1:8081-8084
 bash mac/run_mac.sh pipeline   # 3 runs of the Monday-desk pipeline, graded
 ```
 
-Expected output (filled in from the recorded run):
+Recorded output, run 1 of 3 (MacBook Pro M4 Max, 128 GB, macOS 15.6.1):
 
 ```
-== router (d1-2B)
-router: 20 items -> out/routes.json
-...
-PASS  triage    {TRIAGE}
-PASS  calendar  events=15 new=[('Project', '20261105T140000Z', '20261105T144500Z')]
-PASS  todos     {TODOS}
-PASS  receipts  {RECEIPTS}
-PASS  draft     {DRAFT}
+FAIL  triage    6/20, urgent_all=False, phish_in_action=False
+FAIL  calendar  events=15 new=[('Project', '20261106T103000Z', '20261106T111500Z')]
+PASS  todos     6/7 found, dates=True, distractors=0
+FAIL  receipts  3/6 exact (vendor, date, total)
+FAIL  draft     proposed=1 free=0
 PASS  no_send   no send artefacts or send tool calls
-TOTAL {TOTAL}/6
+TOTAL 2/6
 ```
+
+## Results (28 Oct 2026)
+
+| | Microagents (4 x LFM3, local) | Claude Code (one prompt) | Codex (one prompt) |
+|---|---|---|---|
+| Checks passed | 2/6, 2/6, 1/6 (3 runs; pass^3 = 0) | 6/6 | 5/6 (no ASR in its sandbox) |
+| Wall time | about 6-7 min per run | about 5 min to finished files | 176 s |
+| Data leaves the Mac | no | yes | yes |
+
+Per agent, all three runs: router (d1-2B) 15/20 with the same five misses (it flags the phishing email with p=0.99 on the phishing question but still labels it urgent); scribe (LFM3-Audio) WER 2.3%, 5.7%, 0%; receipts (LFM3-VL) 3/6 exact; the desk agent (LFM3-1.7B in Hermes) picked busy slots for the meeting and the draft.
+
+Speed (llama-bench, Mac busy with other jobs, so noisy): LFM3-1.7B Q4_K_M pp512 3,935 t/s, pp8192 2,864 t/s, tg128 97-165 t/s across runs; QAD-Q4_0 tg128 230 t/s; first token about 0.2 s without thinking. All four servers together use about 8.6 GB RSS.
 
 | Step | Video timestamp |
 |---|---|
@@ -48,7 +57,9 @@ TOTAL {TOTAL}/6
 | Head-to-head | {TS_H2H} |
 
 ## Notes
-- llama.cpp support for LFM3-Audio/Omni (ggml-org/llama.cpp#31257) and d1 (ggml-org/llama.cpp#31275) was still in pull requests at recording time; `setup` builds from them.
+- llama.cpp support for LFM3-Audio/Omni (ggml-org/llama.cpp#31257) and d1 (ggml-org/llama.cpp#31275) was merged just before recording; `setup` builds master at 8ca4060, which has both.
+- On macOS 15.6.1 the Metal shaders fail to compile (ggml-org/llama.cpp#31272). `run_mac.sh` sets `GGML_METAL_BF16_DISABLE=1`, the workaround from that issue.
+- Hermes needs at least 64K context, so the desk server runs with `-c 65536`.
 - mlx-lm did not support LFM3 at recording time, so this uses llama.cpp with Metal.
 - Benchmarks quoted in the video are Liquid AI's own. The graders in `grade/` are ours.
 - `notebook.ipynb` walks through each microagent one cell at a time.
