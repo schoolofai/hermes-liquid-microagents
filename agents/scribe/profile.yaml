@@ -1,0 +1,9 @@
+# Hermes profile for the scribe microagent. Created with:
+#   HERMES_HOME=$WORK/hermes-home hermes profile create scribe --description "$(head -2 agents/scribe/SOUL.md | tail -1)"
+# then copy agents/scribe/SOUL.md into the profile and set the model below (verify keys with `scribe setup` / `hermes model`).
+model:
+  provider: custom
+  base_url: http://127.0.0.1:8082/v1
+  default: scribe-local
+auxiliary:
+  provider: main   # keep compression/titles/vision on the local model, nothing goes to the cloud

@@ -1,0 +1,9 @@
+# Hermes profile for the desk microagent. Created with:
+#   HERMES_HOME=$WORK/hermes-home hermes profile create desk --description "$(head -2 agents/desk/SOUL.md | tail -1)"
+# then copy agents/desk/SOUL.md into the profile and set the model below (verify keys with `desk setup` / `hermes model`).
+model:
+  provider: custom
+  base_url: http://127.0.0.1:8084/v1
+  default: desk-local
+auxiliary:
+  provider: main   # keep compression/titles/vision on the local model, nothing goes to the cloud
