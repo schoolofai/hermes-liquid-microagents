@@ -1,0 +1,6 @@
+plugins:
+  enabled:
+    - desk-tools
+tools:
+  tool_search:
+    enabled: "off"

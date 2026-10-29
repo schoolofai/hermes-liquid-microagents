@@ -1,0 +1,9 @@
+plugins:
+  enabled:
+    - desk-tools
+skills:
+  auto_load:
+    - desk-day
+tools:
+  tool_search:
+    enabled: "off"

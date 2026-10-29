@@ -1,0 +1,7 @@
+plugins:
+  enabled:
+    - desk-tools
+    - skill-gate
+tools:
+  tool_search:
+    enabled: "off"

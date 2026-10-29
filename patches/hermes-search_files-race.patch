@@ -1,0 +1,21 @@
+Hermes Agent at 0431192d (github.com/NousResearch/hermes-agent).
+search_files can crash with ProcessLookupError when ripgrep exits between
+poll() and getpgid() (seen when the result limit is hit). Apply with:
+  cd hermes-agent && git apply ../hermes-liquid-microagents/patches/hermes-search_files-race.patch
+
+diff --git a/tools/file_operations_search.py b/tools/file_operations_search.py
+index 496e9d90..904377a8 100644
+--- a/tools/file_operations_search.py
++++ b/tools/file_operations_search.py
+@@ -404,7 +404,10 @@ class SearchMixin:
+                 exit_code = 124
+                 break
+         if proc.poll() is None:
+-            _kill_process_group_posix(proc)  # native lane is POSIX-only (gate above)
++            try:
++                _kill_process_group_posix(proc)  # native lane is POSIX-only (gate above)
++            except ProcessLookupError:
++                pass  # rg exited between poll() and getpgid() (race when the result limit is hit)
+         proc.wait()
+         drainer.join()
+         proc.stdout.close()

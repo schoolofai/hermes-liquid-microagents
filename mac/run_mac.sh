@@ -32,6 +32,8 @@ setup() {
   hf download LiquidAI/LFM3-Audio-2B-GGUF LFM3-Audio-2B-Q4_K_M.gguf mmproj-LFM3-Audio-2B-Q8_0.gguf --local-dir "$W/models"
   hf download LiquidAI/d1-2B-GGUF --include "*Q8_0*" --local-dir "$W/models"
   [ -d "$W/hermes-agent" ] || git clone -q https://github.com/NousResearch/hermes-agent "$W/hermes-agent"
+  (cd "$W/hermes-agent" && git checkout -q 0431192d && (git apply --check "$REPO/patches/hermes-search_files-race.patch" 2>/dev/null && git apply "$REPO/patches/hermes-search_files-race.patch" || true))
+  [ -x "$W/.hvenv/bin/python" ] || { python3 -m venv "$W/.hvenv"; "$W/.hvenv/bin/pip" -q install -e "$W/hermes-agent"; }
   rm -rf "$W/sandbox"; python3 "$REPO/fixtures/make_fixtures.py" "$W/sandbox"
   for m in "$W"/sandbox/answers/memo_scripts/*.txt; do n=$(basename "${m%.txt}"); say -v Samantha -o "$W/sandbox/voice/$n.aiff" -f "$m"; afconvert -f WAVE -d LEI16@16000 "$W/sandbox/voice/$n.aiff" "$W/sandbox/voice/$n.wav"; rm "$W/sandbox/voice/$n.aiff"; done
   rm -rf "$W/answers/monday"; mkdir -p "$W/answers"; mv "$W/sandbox/answers" "$W/answers/monday"   # keys live OUTSIDE the sandbox so agents cannot read them
@@ -61,27 +63,16 @@ bench() {  # clean numbers: run with nothing else going
   say_log "BENCH_DONE (server RSS in out/peak_32k.txt, TTFT in out/ttft.json)"
 }
 
-pipeline() {
-  source "$W/.venv/bin/activate"; export HPY="$W/.hvenv/bin/python"
-  for run in 1 2 3; do
-    (cd "$W/sandbox" && git checkout -q . && git clean -qfd)
-    say_log "pipeline run $run"; bash "$REPO/pipeline/run_pipeline.sh" "$W/sandbox" | tee "$W/out/pipeline_run$run.txt"
-    cp -r "$W/sandbox/out" "$W/out/sandbox_out_run$run"; cp -r "$W/sandbox/drafts" "$W/out/drafts_run$run"
-  done
-  say_log "PIPELINE_DONE"
+pipeline() {  # router v2 -> scribe -> receipts -> desk (Hermes, skills.auto_load); 3 fresh runs, grade_v2. Starts and stops its own servers.
+  bash "$REPO/pipeline/e2e/run_e2e.sh" "${SETUP:-D_auto_load}" 3 | tee "$W/out/e2e.txt"; say_log "PIPELINE_DONE"
 }
 
-frontier() {  # same pipeline as ONE big agent; throwaway folders; no session persistence; never edits ~/.claude or ~/.codex
-  for a in claude codex; do rm -rf "$W/$a-run"; python3 "$REPO/fixtures/make_fixtures.py" "$W/$a-run"; rm -rf "$W/$a-run/answers"; cp "$W"/sandbox/voice/*.wav "$W/$a-run/voice/"; done
-  P=$(cat "$REPO/pipeline/one_big_agent_prompt.md")
-  (cd "$W/claude-run" && /usr/bin/time -p claude -p "$P" --permission-mode acceptEdits --no-session-persistence --output-format json >"$W/out/claude.json" 2>"$W/out/claude.time") || true
-  (cd "$W/codex-run" && /usr/bin/time -p codex exec --ephemeral --skip-git-repo-check --sandbox workspace-write --json "$P" >"$W/out/codex.jsonl" 2>"$W/out/codex.time") || true
-  for a in claude codex; do ANSWERS="$W/answers/monday" python3 "$REPO/grade/grade.py" "$W/$a-run" | tee "$W/out/grade_$a.txt"; done
-  say_log "FRONTIER_DONE"
+frontier() {  # same tasks as ONE big agent; throwaway folders; no session persistence; never edits ~/.claude or ~/.codex
+  bash "$REPO/pipeline/e2e/run_frontier.sh" | tee "$W/out/frontier.txt"; say_log "FRONTIER_DONE"
 }
 
 stop() { pkill -f "$W/llama-" || true; say_log "servers stopped"; }
 case "${1:-all}" in
   setup) setup;; bench) bench;; serve) serve;; pipeline) pipeline;; frontier) frontier;; stop) stop;;
-  all) setup; bench; serve; pipeline; stop; frontier; (cd "$W" && tar czf results.tgz out run.log); say_log "ALL_DONE";;
+  all) setup; bench; pipeline; frontier; (cd "$W" && tar czf results.tgz out run.log); say_log "ALL_DONE";;
 esac

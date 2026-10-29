@@ -1,0 +1,3 @@
+name: skill-gate
+version: "1.0"
+description: Block desk tools and file writes until the desk-day skill has been opened
