@@ -1,6 +1,9 @@
 # Hermes + Liquid AI: Rise of the Microagent
 
-**Video:** [Watch on YouTube](VIDEO_LINK_PLACEHOLDER) · Write-up: [proaiclips.substack.com](https://proaiclips.substack.com)
+**Video:** [Watch on YouTube](https://youtu.be/f37QpvMJV7g) · Write-up: [proaiclips.substack.com](https://proaiclips.substack.com)
+
+**Chapters:** [0:00](https://youtu.be/f37QpvMJV7g?t=0) The Monday desk · [1:34](https://youtu.be/f37QpvMJV7g?t=94) Monolith vs microservice · [2:35](https://youtu.be/f37QpvMJV7g?t=155) Why now: LFM3 · [3:38](https://youtu.be/f37QpvMJV7g?t=218) Hermes: tools, skills, harness · [4:42](https://youtu.be/f37QpvMJV7g?t=282) Inside the desk · [6:35](https://youtu.be/f37QpvMJV7g?t=395) The experiment · [7:50](https://youtu.be/f37QpvMJV7g?t=470) Results · [8:41](https://youtu.be/f37QpvMJV7g?t=521) Why skills win · [10:30](https://youtu.be/f37QpvMJV7g?t=630) Full pipeline · [10:58](https://youtu.be/f37QpvMJV7g?t=658) Head to head · [11:47](https://youtu.be/f37QpvMJV7g?t=707) Next: fine-tuning · [12:26](https://youtu.be/f37QpvMJV7g?t=746) Verdict
+
 
 Four small, private, specialised agents on one Mac, wired into one pipeline. Each microagent does one job on the LFM3 model built for it, in [Hermes Agent](https://github.com/NousResearch/hermes-agent) or behind a local llama.cpp server. The finding: with a 1.7B model, the harness (SOUL.md, tools, skills, scripts) matters more than the model. All data is fake.
 
@@ -15,20 +18,20 @@ Four small, private, specialised agents on one Mac, wired into one pipeline. Eac
 
 Everything goes into `~/proai-tmp/lfm3`. Nothing outside that folder is changed. Each step lists what it runs, the command, the output to expect, and where it is in the video.
 
-**1. Setup** · builds llama.cpp with Metal, downloads about 6 GB of GGUFs, clones Hermes Agent at `0431192d` and applies `patches/hermes-search_files-race.patch`, makes the fake sandbox. Video: `[TIMESTAMP]`
+**1. Setup** · builds llama.cpp with Metal, downloads about 6 GB of GGUFs, clones Hermes Agent at `0431192d` and applies `patches/hermes-search_files-race.patch`, makes the fake sandbox. Video: [3:38](https://youtu.be/f37QpvMJV7g?t=218)
 ```bash
 git clone https://github.com/schoolofai/hermes-liquid-microagents && cd hermes-liquid-microagents
 bash mac/run_mac.sh setup
 ```
 Expected: `SETUP_DONE` in `~/proai-tmp/lfm3/run.log`.
 
-**2. Benchmark** · `llama-bench` and a TTFT probe for LFM3-1.7B. Video: `[TIMESTAMP]`
+**2. Benchmark** · `llama-bench` and a TTFT probe for LFM3-1.7B. Video: [4:42](https://youtu.be/f37QpvMJV7g?t=282)
 ```bash
 bash mac/run_mac.sh bench
 ```
 Expected (M4 Max, quiet machine): tg128 about 100 tok/s or more, first token about 0.2 s. Inside the full pipeline, with long contexts and other jobs running, the desk generated at about 60 tok/s.
 
-**3. Pipeline, 3 fresh runs** · `pipeline/e2e/run_e2e.sh` starts the four servers on 127.0.0.1, then for each run: router v2, scribe, receipts, desk in Hermes (skills preloaded with `skills.auto_load`), graded by `grade/grade_v2.py`. Video: `[TIMESTAMP]`
+**3. Pipeline, 3 fresh runs** · `pipeline/e2e/run_e2e.sh` starts the four servers on 127.0.0.1, then for each run: router v2, scribe, receipts, desk in Hermes (skills preloaded with `skills.auto_load`), graded by `grade/grade_v2.py`. Video: [10:30](https://youtu.be/f37QpvMJV7g?t=630)
 ```bash
 bash mac/run_mac.sh pipeline            # or: bash pipeline/e2e/run_e2e.sh D_auto_load 3
 ```
@@ -45,13 +48,13 @@ TOTAL 6/6
 peak RSS, 4 servers: 10.5 GB
 ```
 
-**4. Harness experiment (desk only)** · the same LFM3-1.7B in four harness setups, 3 runs each. Video: `[TIMESTAMP]`
+**4. Harness experiment (desk only)** · the same LFM3-1.7B in four harness setups, 3 runs each. Video: [6:35](https://youtu.be/f37QpvMJV7g?t=395)
 ```bash
 SETUP=C_custom_tools bash pipeline/e2e/run_e2e.sh C_custom_tools 3   # any folder in experiments/desk-skills/setups
 ```
 Expected: the numbers in the results tables below.
 
-**5. Head-to-head** · one prompt to Claude Code and to Codex, each in a throwaway copy of the sandbox. Needs both CLIs signed in; never edits `~/.claude` or `~/.codex`. Video: `[TIMESTAMP]`
+**5. Head-to-head** · one prompt to Claude Code and to Codex, each in a throwaway copy of the sandbox. Needs both CLIs signed in; never edits `~/.claude` or `~/.codex`. Video: [10:58](https://youtu.be/f37QpvMJV7g?t=658)
 ```bash
 bash mac/run_mac.sh frontier
 ```
